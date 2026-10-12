@@ -1,0 +1,308 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#1677ff">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Taxometer Joel">
+  <link rel="manifest" href="./manifest.json">
+  <link rel="apple-touch-icon" href="./icon-180.png">
+  <title>Taxometer Joel</title>
+  <style>
+    :root { color-scheme: dark; --bg:#10141c; --panel:#1b2330; --panel2:#222d3d; --text:#f5f7fb; --muted:#b8c3d3; --blue:#1677ff; --blue2:#0d5ccc; --border:#354257; --green:#78dfaa; --red:#ff9696; }
+    * { box-sizing:border-box; }
+    html { min-height:100%; background:var(--bg); }
+    body { margin:0; min-height:100vh; padding:calc(20px + env(safe-area-inset-top)) 16px calc(24px + env(safe-area-inset-bottom)); background:linear-gradient(180deg,#111a29 0%,var(--bg) 250px); color:var(--text); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+    .app { width:100%; max-width:480px; margin:0 auto; }
+    header { text-align:center; padding:16px 8px 22px; }
+    .brand { display:inline-grid; place-items:center; width:62px; height:62px; border-radius:19px; background:var(--blue); font-size:29px; box-shadow:0 8px 24px #1677ff35; }
+    h1 { font-size:29px; line-height:1.15; margin:15px 0 8px; letter-spacing:-.5px; }
+    .subtitle { color:var(--muted); font-size:15px; line-height:1.5; margin:0; }
+    .offline { display:flex; align-items:center; justify-content:center; gap:8px; color:var(--muted); font-size:12px; margin-top:13px; }
+    .dot { width:8px; height:8px; border-radius:50%; background:#f0bf61; }
+    .dot.ready { background:var(--green); }
+    .card { background:var(--panel); border:1px solid #ffffff0d; border-radius:22px; padding:20px; box-shadow:0 14px 40px #00000020; }
+    .hidden { display:none !important; }
+    .section-title { font-size:20px; margin:0 0 8px; }
+    .section-note { margin:0 0 18px; color:var(--muted); font-size:14px; line-height:1.45; }
+    .route-button { width:100%; display:flex; align-items:center; justify-content:space-between; gap:12px; padding:17px 16px; margin-top:12px; border:0; border-radius:15px; background:var(--blue); color:white; text-align:left; font-size:16px; font-weight:650; cursor:pointer; min-height:60px; }
+    .route-button:active, .primary:active { background:var(--blue2); transform:scale(.99); }
+    .arrow { font-size:22px; font-weight:400; }
+    label { display:block; font-size:14px; font-weight:600; margin:15px 0 7px; }
+    input { display:block; width:100%; min-height:49px; padding:12px 14px; color:var(--text); background:#111722; border:1px solid var(--border); border-radius:12px; font-size:17px; outline:none; }
+    input:focus { border-color:var(--blue); box-shadow:0 0 0 3px #1677ff2b; }
+    input:disabled { color:#8995a7; background:#18202c; }
+    .timer-box { margin-top:21px; padding:17px 12px; border-radius:17px; text-align:center; background:var(--panel2); }
+    .timer-caption { color:var(--muted); font-size:13px; text-transform:uppercase; letter-spacing:1.2px; }
+    .timer { font-variant-numeric:tabular-nums; font-size:39px; letter-spacing:1px; font-weight:750; margin-top:4px; }
+    .actions { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:16px; }
+    button { font-family:inherit; -webkit-tap-highlight-color:transparent; }
+    .primary, .secondary { border:0; border-radius:13px; min-height:48px; padding:12px; font-size:15px; font-weight:700; cursor:pointer; }
+    .primary { background:var(--blue); color:white; }
+    .secondary { background:#303b4c; color:var(--text); }
+    button:disabled { opacity:.42; cursor:default; }
+    .message { min-height:22px; margin:12px 0 0; text-align:center; color:var(--muted); font-size:13px; line-height:1.45; }
+    .message.error { color:var(--red); }
+    .result { margin-top:15px; padding:16px; background:#142b25; border:1px solid #32694e; border-radius:15px; }
+    .result h3 { margin:0 0 12px; color:var(--green); font-size:16px; }
+    .result-row { display:flex; justify-content:space-between; gap:12px; padding:7px 0; color:#d9e4e0; font-size:14px; }
+    .result-row strong { text-align:right; color:white; font-variant-numeric:tabular-nums; }
+    .result-total { border-top:1px solid #32694e; margin-top:6px; padding-top:13px; font-size:16px; }
+    .result-total strong { color:var(--green); font-size:23px; }
+    .back { width:100%; margin-top:12px; }
+    footer { color:#8491a4; font-size:12px; line-height:1.5; text-align:center; padding:18px 12px 0; }
+    @media (max-width:370px) { body { padding-left:11px; padding-right:11px; } .card { padding:16px; } .timer { font-size:34px; } .actions { grid-template-columns:1fr; } }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header>
+      <div class="brand" aria-hidden="true">🚕</div>
+      <h1>Taxometer Joel</h1>
+      <p class="subtitle">Deine Fahrt. Deine Kilometer. Dein Preis.</p>
+      <div class="offline"><span id="offline-dot" class="dot"></span><span id="offline-status">Offline-Modus wird vorbereitet …</span></div>
+    </header>
+
+    <section id="home" class="card">
+      <h2 class="section-title">Willkommen!</h2>
+      <p class="section-note">Welche Route möchtest du berechnen?</p>
+      <button class="route-button" type="button" data-route="friends"><span>Route für Bekannte und Freunde</span><span class="arrow">›</span></button>
+      <button class="route-button" type="button" data-route="guests"><span>Route für Gäste</span><span class="arrow">›</span></button>
+    </section>
+
+    <section id="trip" class="card hidden">
+      <h2 id="route-title" class="section-title">Route</h2>
+      <p class="section-note">Trage den Startkilometerstand und den Kilometerpreis ein, bevor du losfährst.</p>
+
+      <label for="km-start">Kilometerstand vor der Fahrt</label>
+      <input id="km-start" type="text" inputmode="decimal" autocomplete="off" placeholder="z. B. 12500">
+
+      <label for="km-end">Kilometerstand nach der Fahrt</label>
+      <input id="km-end" type="text" inputmode="decimal" autocomplete="off" placeholder="Am Fahrtende eintragen" disabled>
+
+      <label for="price">Preis pro Kilometer (€)</label>
+      <input id="price" type="text" inputmode="decimal" autocomplete="off" placeholder="z. B. 1,50">
+
+      <div class="timer-box">
+        <div class="timer-caption">Fahrzeit</div>
+        <div id="timer" class="timer">00:00:00</div>
+      </div>
+
+      <div class="actions">
+        <button id="start-button" class="primary" type="button">Fahrt starten</button>
+        <button id="stop-button" class="primary" type="button" disabled>Fahrt beenden</button>
+      </div>
+      <p id="message" class="message" role="status" aria-live="polite">Noch keine Fahrt berechnet.</p>
+
+      <div id="result" class="result hidden" aria-live="polite">
+        <h3>Fahrt abgeschlossen</h3>
+        <div class="result-row"><span>Gefahrene Strecke</span><strong id="result-km">0 km</strong></div>
+        <div class="result-row"><span>Preis pro Kilometer</span><strong id="result-price">0,00 €</strong></div>
+        <div class="result-row"><span>Fahrzeit</span><strong id="result-time">00:00:00</strong></div>
+        <div class="result-row result-total"><span>Gesamtpreis</span><strong id="result-total">0,00 €</strong></div>
+      </div>
+
+      <div class="actions">
+        <button id="new-button" class="secondary" type="button" disabled>Neue Fahrt</button>
+        <button id="back-button" class="secondary" type="button">Zur Startseite</button>
+      </div>
+    </section>
+
+    <footer>Der Fahrpreis wird anhand der gefahrenen Kilometer berechnet. Die Fahrzeit wird zusätzlich angezeigt und verändert den Preis nicht.</footer>
+  </main>
+  <script>
+    const home = document.getElementById('home');
+    const trip = document.getElementById('trip');
+    const routeTitle = document.getElementById('route-title');
+    const startInput = document.getElementById('km-start');
+    const endInput = document.getElementById('km-end');
+    const priceInput = document.getElementById('price');
+    const timerLabel = document.getElementById('timer');
+    const startButton = document.getElementById('start-button');
+    const stopButton = document.getElementById('stop-button');
+    const newButton = document.getElementById('new-button');
+    const backButton = document.getElementById('back-button');
+    const message = document.getElementById('message');
+    const result = document.getElementById('result');
+    const offlineStatus = document.getElementById('offline-status');
+    const offlineDot = document.getElementById('offline-dot');
+
+    let currentRoute = '';
+    let startKm = null;
+    let pricePerKm = null;
+    let startedAt = null;
+    let timerHandle = null;
+
+    function parseNumber(input, label) {
+      const normalized = input.value.trim().replace(',', '.');
+      if (normalized === '') {
+        showMessage(`Bitte gib ${label} ein.`, true);
+        input.focus();
+        return null;
+      }
+      const value = Number(normalized);
+      if (!Number.isFinite(value) || value < 0) {
+        showMessage(`Bitte gib für „${label}“ eine gültige Zahl ab 0 ein.`, true);
+        input.focus();
+        return null;
+      }
+      return value;
+    }
+
+    function money(value) {
+      return new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(value);
+    }
+
+    function decimal(value) {
+      return new Intl.NumberFormat('de-DE', { maximumFractionDigits: 2, minimumFractionDigits: 2 }).format(value);
+    }
+
+    function elapsedSeconds() {
+      return startedAt === null ? 0 : Math.floor((Date.now() - startedAt) / 1000);
+    }
+
+    function timeText(seconds) {
+      const hours = Math.floor(seconds / 3600);
+      const minutes = Math.floor((seconds % 3600) / 60);
+      const remainingSeconds = seconds % 60;
+      return [hours, minutes, remainingSeconds].map(value => String(value).padStart(2, '0')).join(':');
+    }
+
+    function updateTimer() {
+      if (startedAt !== null) timerLabel.textContent = timeText(elapsedSeconds());
+    }
+
+    function showMessage(text, isError = false) {
+      message.textContent = text;
+      message.classList.toggle('error', isError);
+    }
+
+    function openRoute(route) {
+      if (startedAt !== null) return;
+      currentRoute = route;
+      routeTitle.textContent = route === 'friends' ? 'Route für Bekannte und Freunde' : 'Route für Gäste';
+      home.classList.add('hidden');
+      trip.classList.remove('hidden');
+      resetTrip();
+    }
+
+    function startTrip() {
+      const km = parseNumber(startInput, 'den Kilometerstand vor der Fahrt');
+      if (km === null) return;
+      const price = parseNumber(priceInput, 'den Preis pro Kilometer');
+      if (price === null) return;
+
+      startKm = km;
+      pricePerKm = price;
+      startedAt = Date.now();
+      endInput.disabled = false;
+      startInput.disabled = true;
+      priceInput.disabled = true;
+      startButton.disabled = true;
+      stopButton.disabled = false;
+      newButton.disabled = true;
+      backButton.disabled = true;
+      result.classList.add('hidden');
+      showMessage('Die Fahrt läuft. Trage den Endkilometerstand nach der Fahrt ein.');
+      updateTimer();
+      timerHandle = window.setInterval(updateTimer, 250);
+    }
+
+    function stopTrip() {
+      if (startedAt === null) return;
+      const endKm = parseNumber(endInput, 'den Kilometerstand nach der Fahrt');
+      if (endKm === null) return;
+      if (endKm < startKm) {
+        showMessage('Der Kilometerstand nach der Fahrt darf nicht kleiner sein als vorher.', true);
+        endInput.focus();
+        return;
+      }
+
+      const distance = endKm - startKm;
+      const total = distance * pricePerKm;
+      const duration = elapsedSeconds();
+      window.clearInterval(timerHandle);
+      timerHandle = null;
+      timerLabel.textContent = timeText(duration);
+      startedAt = null;
+
+      endInput.disabled = true;
+      stopButton.disabled = true;
+      newButton.disabled = false;
+      backButton.disabled = false;
+      document.getElementById('result-km').textContent = `${decimal(distance)} km`;
+      document.getElementById('result-price').textContent = money(pricePerKm);
+      document.getElementById('result-time').textContent = timeText(duration);
+      document.getElementById('result-total').textContent = money(total);
+      result.classList.remove('hidden');
+      showMessage('Die Fahrt wurde erfolgreich berechnet.');
+    }
+
+    function resetTrip() {
+      if (timerHandle !== null) window.clearInterval(timerHandle);
+      timerHandle = null;
+      startedAt = null;
+      startKm = null;
+      pricePerKm = null;
+      startInput.value = '';
+      endInput.value = '';
+      priceInput.value = '';
+      startInput.disabled = false;
+      endInput.disabled = true;
+      priceInput.disabled = false;
+      timerLabel.textContent = '00:00:00';
+      startButton.disabled = false;
+      stopButton.disabled = true;
+      newButton.disabled = true;
+      backButton.disabled = false;
+      result.classList.add('hidden');
+      showMessage('Noch keine Fahrt berechnet.');
+    }
+
+    function goHome() {
+      if (startedAt !== null) return;
+      trip.classList.add('hidden');
+      home.classList.remove('hidden');
+    }
+
+    document.querySelectorAll('[data-route]').forEach(button => {
+      button.addEventListener('click', () => openRoute(button.dataset.route));
+    });
+    startButton.addEventListener('click', startTrip);
+    stopButton.addEventListener('click', stopTrip);
+    newButton.addEventListener('click', resetTrip);
+    backButton.addEventListener('click', goHome);
+
+    function updateOfflineStatus() {
+      if (!('serviceWorker' in navigator)) {
+        offlineStatus.textContent = 'Offline-Speicherung wird von diesem Browser nicht unterstützt';
+        return;
+      }
+      if (navigator.serviceWorker.controller) {
+        offlineStatus.textContent = 'Offline bereit';
+        offlineDot.classList.add('ready');
+      } else {
+        offlineStatus.textContent = 'Offline-Version wird vorbereitet …';
+      }
+    }
+
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then(() => {
+            updateOfflineStatus();
+            navigator.serviceWorker.addEventListener('controllerchange', updateOfflineStatus);
+            window.setTimeout(updateOfflineStatus, 1000);
+          })
+          .catch(() => {
+            offlineStatus.textContent = 'Bitte einmal online öffnen, um Offline-Nutzung einzurichten';
+          });
+      });
+    } else {
+      offlineStatus.textContent = 'Offline-Speicherung nicht verfügbar';
+    }
+  </script>
+</body>
+</html>

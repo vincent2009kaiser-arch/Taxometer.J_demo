@@ -1,0 +1,26 @@
+{
+  "id": "./",
+  "name": "Taxometer Joel",
+  "short_name": "Taxometer",
+  "description": "Offline nutzbarer Kilometer- und Fahrzeitrechner",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#10141c",
+  "theme_color": "#1677ff",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "./icon-180.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
